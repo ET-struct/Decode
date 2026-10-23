@@ -17,6 +17,7 @@ module decode(
     output wire [4:0]    id_ex_instr_bits_20_16,
                         id_ex_instr_bits_15_11
 );
+    //internal
     wire [31:0] sign_ext_internal,
                 readdat1_internal,
                 readdat2_internal;
@@ -26,11 +27,13 @@ module decode(
 
 
     signExtend sE0(
+        //COMPLETE PARAMETERS
         .immediate(if_id_instr[15:0]),
         .extended(sign_ext_internal)
     );
 
     regfile rf0(
+        //COMPLETE PARAMETERS
         .clk(clk),
         .rst(rst),
         .regwrite(wb_reg_write),
@@ -43,6 +46,7 @@ module decode(
     );
 
     control c0(
+         //COMPLETE PARAMETERS
         .clk(clk),
         .rst(rst),
         .opcode(if_id_instr[31:26]),
@@ -52,7 +56,8 @@ module decode(
     ); 
 
     idExLatch iEL0(
-        .clk(clk),
+         //COMPLETE PARAMETERS
+        .clk(clk),                                  //inputs
         .rst(rst),
         .ctl_wb(wb_internal),
         .ctl_mem(mem_internal),
@@ -63,6 +68,7 @@ module decode(
         .sign_ext(sign_ext_internal),
         .instr_bits_20_16(if_id_instr[20:16]),
         .instr_bits_15_11(if_id_instr[15:11]),
+                                                    //outputs
         .wb_out(id_ex_wb),
         .mem_out(id_ex_mem),
         .ctl_out(id_ex_execute),
