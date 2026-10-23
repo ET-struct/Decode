@@ -41,8 +41,8 @@ module decode(
         .rt(if_id_instr[20:16]),
         .rd(wb_write_reg_location),
         .writedata(mem_wb_write_data),
-        .A_readdat1(readdat1_internal),
-        .B_readdat2(readdat2_internal)
+        .A_readdata1(readdat1_internal),
+        .B_readdata2(readdat2_internal)
     );
 
     control c0(
