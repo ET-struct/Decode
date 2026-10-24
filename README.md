@@ -18,7 +18,7 @@
 #### Architecture
 ##### Timing or Behavioral Summary
 The Instruction Decode stage receives a 32-bit instruction and the incremented PC from the IF stage. The top 6 bits (opcode) are decoded by the Control Unit into execution, memory, and write-back signals (`ex`, `mem`, `wb`). Simultaneously, the Register File uses the `rs` and `rt` fields to output read data (`readdat1`, `readdat2`) while the lower 16 bits of the instruction are sign-extended to 32 bits. All of this data, alongside the relevant destination register bits, is passed into the `idExLatch` and captured on the positive clock edge to be fed into the Execute (EX) stage.
-['decode.png'](https://github.com/ET-struct/Decode/blob/main/images/decode.png)
+!['decode.png'](https://github.com/ET-struct/Decode/blob/main/images/decode.png)
 
 #### Implementation
 ##### Source Code
@@ -61,7 +61,7 @@ vvp decode_sim
  10 ns : wb_reg_write_tb = 1 (Simulates writing to REG[2]).
  12 ns : Simulation finishes via $finish command.
 ```
-['decode.png'](https://github.com/ET-struct/Decode/blob/main/images/decode.png)
+!['decode.png'](https://github.com/ET-struct/Decode/blob/main/images/decode.png)
 ## Repository Organizaiton
 .
 ```text
