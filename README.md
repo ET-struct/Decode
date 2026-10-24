@@ -1,85 +1,82 @@
 # MIPS Decode Stage
-<!--
-Replace every item in square brackets before submitting.
-Keep this README focused on what the design does, how it is used, and how it was
-verified.
--->
-## Design Scope and Assumptions
-- **In scope:** [What this lab implements]
-- **Out of scope:** [What this lab intentionally does not implement]
-- **Assumptions:** [Clock frequency, reset behavior, data width, memory model, or
-other assumptions]
-- **Limitations:** [Known limitations or simplified behaviors]
-## Requirements
+### Lab — MIPS Instruction Decode (ID) Stage
+
+#### Design Scope and Assumptions
+*   **In scope:** Implementation of the Instruction Decode (ID) stage of a MIPS pipeline, which includes the Control Unit, Register File, Sign Extension, and the ID/EX Latch.
+*   **Out of scope:** Other MIPS pipeline stages (IF, EX, MEM, WB) and ALU/Branch computation logic. 
+*   **Assumptions:** The design operates on a 32-bit architecture and relies on a positive edge-triggered clock and a synchronous high reset signal to initialize internal registers.
+*   **Limitations:** The register file (`REG[0:31]`) is pre-populated with a limited set of dummy data (10 hardcoded hex values starting at index 0) rather than being dynamically initialized from memory. 
+
+#### Requirements
 | Requirement | Description | Verification Method |
-|---|---|---|
-| REQ-01 | [The design shall ...] | [Test case, waveform, calculation, or
-inspection] |
-| REQ-02 | [The design shall ...] | [Test case, waveform, calculation, or
-inspection] |
-| REQ-03 | [The design shall ...] | [Test case, waveform, calculation, or
-inspection] |
-## Architecture
-### Timing or Behavioral Summary
-Save diagrams in the repository's `images/` folder. Use relative paths so they
-display on GitHub.
-![Timing Diagram](images/[timing-diagram-filename].png)
-## Implementation
-### Source Code
+| ------ | ------ | ------ |
+| REQ-01 | The Control unit shall correctly output `wb`, `mem`, and `ex` signals based on the input 6-bit opcode (R-type, LW, SW, BEQ).[cite: 5] | Testbench simulation (`decodeTB.v`) and waveform inspection. |
+| REQ-02 | The Register File shall output 32-bit data for registers `rs` and `rt` and write data to `rd` when `regwrite` is high.[cite: 3] | Testbench simulation (`decodeTB.v`) and waveform inspection. |
+| REQ-03 | The Sign Extend module shall successfully extend a 16-bit immediate to a 32-bit value.[cite: 4] | Testbench simulation (`decodeTB.v`) and waveform inspection. |
+| REQ-04 | The ID/EX Latch shall correctly pass the register outputs, control signals, and instruction bits to the next stage on the clock edge, or clear them on reset. | Testbench simulation (`decodeTB.v`) and waveform inspection. |
+
+#### Architecture
+##### Timing or Behavioral Summary
+The Instruction Decode stage receives a 32-bit instruction and the incremented PC from the IF stage[cite: 6]. The top 6 bits (opcode) are decoded by the Control Unit into execution, memory, and write-back signals (`ex`, `mem`, `wb`). Simultaneously, the Register File uses the `rs` and `rt` fields to output read data (`readdat1`, `readdat2`) while the lower 16 bits of the instruction are sign-extended to 32 bits. All of this data, alongside the relevant destination register bits, is passed into the `idExLatch` and captured on the positive clock edge to be fed into the Execute (EX) stage.
+['decode.png']()
+
+#### Implementation
+##### Source Code
 | File | Description |
-|---|---|
-| [`[module].v`](LINK_TO_IMPLEMENTATION_CODE) | [Primary implementation module] |
-| [`[component].v`](LINK_TO_COMPONENT_CODE) | [Supporting component] |
-| [`[testbench].v`](LINK_TO_TESTBENCH_CODE) | [Verification testbench] |
-### Implementation Notes
-- [Explain one important design decision.]
-- [Identify any parameterization, reusable module, or interface convention.]
-- [Document any deliberate simplification made for this lab.]
-## Verification
-### Verification Strategy
-The design is verified using **[simulation, formal checks, hardware testing, or
-another method]**.
-Verification covers:
-- [Normal operating case]
-- [Boundary or maximum-value case]
-- [Reset or initialization case]
-- [Invalid, stalled, or exceptional case, if applicable]
-### Testbench and Waveform
-Save screenshots and waveform images in the repository's `images/` folder.
-![Testbench or waveform](images/[testbench-screenshot-filename].png)
-The testbench source is available [*here*](LINK_TO_TESTBENCH_CODE).
-### Results
-| Test Case | Expected Result | Observed Result | Status |
-|---|---|---|---|
-| TC-01 — [Name] | [Expected behavior] | [Observed behavior] | Pass / Fail |
-| TC-02 — [Name] | [Expected behavior] | [Observed behavior] | Pass / Fail |
-| TC-03 — [Name] | [Expected behavior] | [Observed behavior] | Pass / Fail |
-## Reproduction Instructions
-### Tools and Versions
-- **Simulator / synthesis tool:** [Name and version]
-- **Language / standard:** [Verilog/SystemVerilog version]
-- **Operating system:** [macOS, Windows, Linux, or other]
-- **Additional dependencies:** [List any required tools or libraries]
-### Build and Run
+| ------ | ------ |
+| [`decode.v`](decode.v) | Final ID stage module instantiating and connecting the Register File, Control, Sign Extend, and ID/EX Latch. |
+| [`regfile.v`](regfile.v) | 32x32-bit register file module pre-loaded with dummy values and supporting synchronous reset. |
+| [`control.v`](control.v) | Control module decoding MIPS opcodes (RTYPE, LW, SW, BEQ) into pipeline control signals. |
+| [`signExtend.v`](signExtend.v) | Combinational logic to extend a 16-bit immediate to 32 bits. |
+| [`idExLatch.v`](idExLatch.v) | Pipeline latch capturing signals on the clock edge for the Execute stage. |
+| [`decodeTB.v`](decodeTB.v) | Verification testbench driving clock, reset, and instruction inputs to test decoding and register writes. |
+
+##### Implementation Notes
+*  **Synchronous Reset:** A synchronous reset (`rst`) is explicitly included in `regfile.v`, `control.v`, and `idExLatch.v` to zero out their values and clear uninitialized states in the simulator.
+*  **Control Opcode Defaults:** The `control.v` module implements a `default` case for unrecognized opcodes that prints `"Opcode not recognized."` to the console and safely zeros out the control signals.
+
+#### Verification
+##### Verification Strategy
+The design is verified using an integrated testbench (`decodeTB.v`) that first initializes a system reset, then progressively feeds the module a sequence of MIPS instruction formats: R-Format (ADD), Branch (BEQ), Load Word (LW), and Store Word (SW). It concludes by driving `wb_reg_write_tb` high to simulate the Write Back stage updating the Register File.
+
+#### Reproduction Instructions
+##### Tools and Versions
+*   **Simulator / synthesis tool:** Xilinx Vivado (GUI) or Icarus Verilog
+*   **Language / standard:** Verilog
+
+##### Build and Run
 ```bash
-# Replace these commands with the commands required for this lab.
-[compile-command]
-[run-command]
+To compile and run using a standard Verilog simulator (e.g., Icarus Verilog):
+iverilog -o decode_sim decodeTB.v decode.v regfile.v signExtend.v control.v idExLatch.v
+vvp decode_sim
 ```
-Expected output:
+Expected Output:
 ```text
-[Paste a short representative output or result here.]
+# The testbench generates a waveform. Expected key signal transitions:
+  0 ns : rst_tb = 1 (Registers cleared)
+  2 ns : rst_tb = 0, Instruction R-Format (ADD) provided to ID stage.
+  4 ns : Instruction BEQ decoded.
+  6 ns : Instruction LW decoded.
+  8 ns : Instruction SW decoded.
+ 10 ns : wb_reg_write_tb = 1 (Simulates writing to REG[2]).
+ 12 ns : Simulation finishes via $finish command.
 ```
-## Repository Organization
-```text
+## Repository Organizaiton
 .
+```text
 ├── README.md
 ├── images/
-│ ├── [timing-diagram-filename].png
-│ └── [testbench-screenshot-filename].png
-├── [source-files]
-└── [testbench-files]
+│   └── decode.png
+├── control.v
+├── decode.v
+├── decodeTB.v
+├── idExLatch.v
+├── regfile.v
+└── signExtend.v
 ```
 ## Known Issues and Future Improvements
-- [Document any known issue, unverified behavior, or technical debt.]
-- [Describe a realistic improvement or extension.]
+- **Technical Debt (Limited Instruction Support):** The Control module (`control.v`) currently only decodes a very limited subset of MIPS opcodes: R-Format, Load Word (LW), Store Word (SW), Branch on Equal (BEQ), and NOP[cite: 13]. Any other instruction falls into the `default` case and zeroes out the control signals while printing an "Opcode not recognized" warning[cite: 13].
+- **Technical Debt (Manual Write-Back):** Because this stage is isolated from the rest of the pipeline, the Write Back (WB) phase must be manually simulated in the testbench (`decodeTB.v`) by manually driving the `wb_reg_write_tb`, `wb_write_reg_location_tb`, and `mem_wb_write_data_tb` signals at specific time intervals to verify register writes[cite: 7].
+- **Future Improvement (Expand Instruction Set):** Update the `control.v` module to support a wider array of MIPS instructions, such as J-type instructions (like `j` or `jal`) and other I-type arithmetic instructions (like `addi`), which will be necessary for executing complete programs[cite: 13].
+- **Future Improvement (Pipeline Integration):** Connect the top-level `decode.v` module's inputs (like `if_id_instr` and `if_id_npc`) to the outputs of the previously completed Instruction Fetch (IF) stage, and prepare to route the `idExLatch` outputs to the upcoming Execute (EX) stage[cite: 4].
+
