@@ -11,15 +11,15 @@ module idExLatch(
                       sign_ext,
     input wire [4:0] instr_bits_20_16,
                      instr_bits_15_11,
-    output reg [1:0] wb_out,
-    output reg [2:0] mem_out,
-    output reg [3:0] ctl_out,
-    output reg [31:0] npc_out,
-                      readdat1_out,
-                      readdat2_out,
-                      sign_ext_out,
-    output reg [4:0] instr_bits_20_16_out,
-                     instr_bits_15_11_out
+    output reg [1:0] wb_out=0,
+    output reg [2:0] mem_out=0,
+    output reg [3:0] ctl_out=0,
+    output reg [31:0] npc_out=0,
+                      readdat1_out=0,
+                      readdat2_out=0,
+                      sign_ext_out=0,
+    output reg [4:0] instr_bits_20_16_out=0,
+                     instr_bits_15_11_out=0
 );
 
 
